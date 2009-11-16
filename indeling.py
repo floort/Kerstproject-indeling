@@ -26,11 +26,35 @@ if __name__ == "__main__":
 			"want": map(lambda i: int(i), row[2:7]),
 			"dont": map(lambda i: int(i), row[7:12])
 		})
-	print "Workshops: ", workshops
-	print "Votes: ", votes
+
+	# TODO: find out the places available for each workshop
+	# For now assume each workshop has 2 places
+	places = []
+	for w in workshops:
+		places += [w,w,w]
+
 	
-	# Create empty cost matrix
-	size = len(votes)
-	cost = [[0 for j in xrange(size)] for i in xrange(size)]
-	print cost
+	# Create empty cost matrix and fill in the cost for each assignment
+	# NOTE: Lower "cost" is better
+	cost = [[0 for j in xrange(len(places))] for i in xrange(len(votes))]
+	for person in xrange(len(votes)):
+		# Give points for the preferred workshops
+		for rank in xrange(len(votes[person]["want"])): # wants rank=0 most
+			for p in xrange(len(places)):
+				if places[p] == votes[person]["want"][rank]:
+					cost[person][p] = rank-5
+		# Give the "dont" workshops an high cost
+		for d in xrange(len(votes[person]["dont"])):
+			for p in xrange(len(places)):
+				if places[p] == votes[person]["dont"][d]:
+					cost[person][p] = 5 # high cost
+	
+	
+	# Now solve!
+	m = Munkres()
+	indices = m.compute(cost)
+	for person, place in indices:
+		print votes[person]["name"], "\t->\t", places[place]
+
+
 
