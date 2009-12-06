@@ -10,17 +10,19 @@ from munkres import Munkres
 if __name__ == "__main__":
 	if len(sys.argv) != 2:
 		print "Usage:"
-		print sys.argv[0], "data.csv"
+		print sys.argv[0], "stemmen.csv workshops.csv leerlingen.csv"
+		print " = stemmen.csv = "
+		print '"vote_id","leerling_id","want1",..,"want5","no1",..,"no5","0"'
+		print " = workshops.csv = "
+		print '"workshhop_id","naam","aantal_rondes","open"'
+		print " = leerlingen.csv = "
+		print '"id","klas","naam","tussenv","achternaam","mentor"'
 		sys.exit(1)
-	data = csv.reader(open(sys.argv[1]))
 	
-	# Collect all the workshops and votes
+	data = csv.reader(open(sys.argv[1]))
+	# Collect all the votes
 	votes = []
-	workshops = set()
 	for row in data:
-		# Columns [2:12] contain the workshops
-		for w in row[2:12]:
-			workshops.add(int(w))
 		votes.append({
 			"name": row[1],
 			"want": map(lambda i: int(i), row[2:7]),
