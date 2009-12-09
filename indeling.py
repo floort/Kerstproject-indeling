@@ -19,11 +19,12 @@ def cost_matrix(votes, places):
 			for p in xrange(len(places)):
 				if places[p] == votes[person]["dont"][d]:
 					cost[person][p] = 5 # high cost
+	return cost
 	
 
 
 if __name__ == "__main__":
-	if len(sys.argv) != 2:
+	if len(sys.argv) != 4:
 		print "Usage:"
 		print sys.argv[0], "stemmen.csv workshops.csv leerlingen.csv"
 		print " = stemmen.csv = "
@@ -44,14 +45,15 @@ if __name__ == "__main__":
 			"dont": map(lambda i: int(i), row[7:12])
 		})
 
-	# For now assume each workshop has 2 places
+	# There are 2 rounds for the workshops
 	data = csv.reader(open(sys.argv[2]))
 	places = [[],[]]
 	for w in data:
-		if w[4] == 1: # Workshop is open
-			places[0] += [w[0]] * w[2]
-			if w[3] == 2: # Workshop has 2 rounds
-				places[1] += [w[0]] * w[2]
+		if int(w[4]) == 1: # Workshop is open
+			places[0] += [int(w[0])] * int(w[2])
+			if int(w[3]) == 2: # Workshop has 2 rounds
+				places[1] += [int(w[0])] * int(w[2])
+
 
 	cost = cost_matrix(votes, places[0])
 	
@@ -59,7 +61,7 @@ if __name__ == "__main__":
 	m = Munkres()
 	indices = m.compute(cost)
 	for person, place in indices:
-		print votes[person]["name"], "\t->\t", places[place]
+		print votes[person]["name"], "\t->\t", places[0][place]
 
 
 
