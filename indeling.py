@@ -4,6 +4,13 @@ import sys
 import csv
 from munkres import Munkres
 
+import random
+import logging
+import pprint
+import pickle
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 def cost_matrix(votes, places):
 	# Lower cost is better
@@ -35,6 +42,8 @@ if __name__ == "__main__":
 		print '"id","klas","naam","tussenv","achternaam","mentor"'
 		sys.exit(1)
 	
+
+	logging.debug("Collecting all the votes.")
 	data = csv.reader(open(sys.argv[1]))
 	# Collect all the votes
 	votes = []
@@ -45,23 +54,138 @@ if __name__ == "__main__":
 			"dont": map(lambda i: int(i), row[7:12])
 		})
 
+	logging.debug("Load all the worshops.")
 	# There are 2 rounds for the workshops
 	data = csv.reader(open(sys.argv[2]))
 	places = [[],[]]
+	workshops = {}
 	for w in data:
+		workshops[int(w[0])] = {
+			"name": w[1],
+			"plaatsen": int(w[2]),
+			"rondes": int(w[3]),
+			"open": int(w[4]),
+			"indeling": [[] for i in range(int(w[3]))]
+		}
 		if int(w[4]) == 1: # Workshop is open
 			places[0] += [int(w[0])] * int(w[2])
 			if int(w[3]) == 2: # Workshop has 2 rounds
 				places[1] += [int(w[0])] * int(w[2])
 
 
+	logging.debug("Get all the students.")
+	# All students
+	data = csv.reader(open(sys.argv[3]))
+	students = {}
+	no_second_round = set()
+	for s in data:
+		students[int(s[0])] = {
+			"klas": s[1],
+			"naam": s[2],
+			"tussenvoegsel": s[3],
+			"achternaam": s[4],
+			"mentor": s[5]
+		}
+
+
+	logging.debug("Generating cost matrix.")
 	cost = cost_matrix(votes, places[0])
 	
+	logging.debug("Execute munkres algorithm.")
 	# Now solve the first round
 	m = Munkres()
 	indices = m.compute(cost)
-	for person, place in indices:
-		print votes[person]["name"], "\t->\t", places[0][place]
+	
 
+	logging.debug("Utilizing results")
+	students_with_vote = set([a for a, b in indices])
+	students_without_vote = set(students.keys()) - students_with_vote
+	# Put students without vote in random place
+
+	for person, place in indices:
+		for i in xrange(len(votes[person]["want"])):
+			if votes[person]["want"][i] == places[0][place]:
+				del(votes[person]["want"][i])
+				break
+		#print votes[person]["name"], "\t->\t", places[0][place]
+		workshops[places[0][place]]["indeling"][0].append(votes[person]["name"])
+		if workshops[places[0][place]]["rondes"] != 2:
+			no_second_round.add(votes[person]["name"])
+	
+
+	logging.debug("Computing second round.")
+	for n in no_second_round:
+		for i in xrange(len(votes)):
+			if votes[i]["name"] == n:
+				del(votes[i])
+				break
+	cost = cost_matrix(votes, places[1])
+	indices = m.compute(cost)
+
+	for person, place in indices:
+		workshops[places[1][place]]["indeling"][1].append(votes[person]["name"])
+
+	f = open("second_round.pickle", "wb")
+	pickle.dump(workshops, f)
+	f.close()
+
+
+	logging.debug("Lazy students...")
+	# Put all student who did not vote in random groups
+	available = []
+	lazy = {}
+	for w in workshops.keys():
+		if workshops[w]["open"]:
+			if workshops[w]["plaatsen"] > len(workshops[w]["indeling"][0]):
+				available.append(w)
+	for s in students_without_vote:
+		w = random.choice(available)
+		workshops[w]["indeling"][0].append(s)
+		if workshops[w]["rondes"] != 2:
+			no_second_round.add(s)
+		lazy[s] = w
+		if workshops[w]["plaatsen"] <= len(workshops[w]["indeling"][0]):
+			for i in xrange(len(available)):
+				if available[i] == w:
+					del(available[i])
+					break
+	f = open("first_lazy.pickle", "wb")
+	pickle.dump(workshops,f)
+	f.close()
+
+	available = []
+	for w in workshops.keys():
+		if workshops[w]["open"] and (workshops[w]["rondes"] == 2):
+			if workshops[w]["plaatsen"] > len(workshops[w]["indeling"][1]):
+				available.append(w)
+	for s in students_without_vote - no_second_round:
+		w = random.choice(list(set(available) - set([lazy[s]])))
+		workshops[w]["indeling"][1].append(s)
+		if workshops[w]["plaatsen"] <= len(workshops[w]["indeling"][1]):
+			for i in xrange(len(available)):
+				if available[i] == w:
+					del(available[i])
+					break
+
+	
+
+	out = {}
+	for w in workshops.keys():
+		for l in workshops[w]["indeling"][0]:
+			out[int(l)] = [w]
+	for w in workshops.keys():
+		if workshops[w]["rondes"] == 2:
+			for l in workshops[w]["indeling"][1]:
+				out[int(l)].append(w)
+		
+	f = open("out.csv", "w")
+	for l in out.keys():
+		if len(out[l]) == 2:
+			f.write("%d,%d,%d\n" % (l, out[l][0], out[l][1]))
+		else:
+			f.write("%d,%d,\n" % (l, out[l][0]))
+
+	f.close()
+	
 
 
