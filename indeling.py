@@ -10,7 +10,11 @@ import pprint
 import pickle
 
 
-logging.basicConfig(level=logging.DEBUG)
+DATA_DIR="/tmp/kerst"
+LOG_FILE="/tmp/kerst-log"
+
+
+logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG)
 
 def cost_matrix(votes, places):
 	# Lower cost is better
@@ -71,7 +75,7 @@ if __name__ == "__main__":
 			places[0] += [int(w[0])] * int(w[2])
 			if int(w[3]) == 2: # Workshop has 2 rounds
 				places[1] += [int(w[0])] * int(w[2])
-	print "Places: ", len(places[0]), len(places[1])
+	logging.debug("Places: %d %d" % (len(places[0]), len(places[1]))
 
 	logging.debug("Get all the students.")
 	# All students
@@ -142,7 +146,7 @@ if __name__ == "__main__":
 				available.append(w)
 	for s in students_without_vote:
 		if not available:
-			print "Not enough room"
+			logging.error("Not enough room")
 			break
 		w = random.choice(available)
 		workshops[w]["indeling"][0].append(s)
