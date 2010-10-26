@@ -43,9 +43,9 @@ if __name__ == "__main__":
 		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "stemmen.csv")))
 		sys.exit(1)
 	try:
-		workshops_file = open(os.path.join(DAT_DIR, "stemmen.csv"))
+		workshops_file = open(os.path.join(DATA_DIR, "workshops.csv"))
 	except:
-		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "stemmen.csv")))
+		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "workshops.csv")))
 		sys.exit(1)
 	try:
 		leerlingen_file = open(os.path.join(DATA_DIR, "leerlingen.csv"))
@@ -141,7 +141,6 @@ if __name__ == "__main__":
 
 
 
-# There is a bug in this code somewhere..
 	logging.debug("Lazy students...")
 	# Put all student who did not vote in random groups
 	available = []
@@ -182,7 +181,6 @@ if __name__ == "__main__":
 					del(available[i])
 					break
 
-# end of bug area
 
 	out = {}
 	for w in workshops.keys():
