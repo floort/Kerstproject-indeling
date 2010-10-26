@@ -3,7 +3,7 @@
 import sys
 import csv
 from munkres import Munkres
-
+import os.path
 import random
 import logging
 import pprint
@@ -35,20 +35,26 @@ def cost_matrix(votes, places):
 
 
 if __name__ == "__main__":
-	if len(sys.argv) != 4:
-		print "Usage:"
-		print sys.argv[0], "stemmen.csv workshops.csv leerlingen.csv"
-		print " = stemmen.csv = "
-		print '"vote_id","leerling_id","want1",..,"want5","no1",..,"no5","0"'
-		print " = workshops.csv = "
-		print 'workshhop_id,"naam",plaatsen,aantal_rondes,open'
-		print " = leerlingen.csv = "
-		print '"id","klas","naam","tussenv","achternaam","mentor"'
+	if not os.path.exists(os.path.join(DATA_DIR, "leerlingen.csv")):
 		sys.exit(1)
-	
+	try:
+		stemmen_file = open(os.path.join(DATA_DIR, "stemmen.csv"))
+	except:
+		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "stemmen.csv")))
+		sys.exit(1)
+	try:
+		workshops_file = open(os.path.join(DAT_DIR, "stemmen.csv"))
+	except:
+		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "stemmen.csv")))
+		sys.exit(1)
+	try:
+		leerlingen_file = open(os.path.join(DATA_DIR, "leerlingen.csv"))
+	except:
+		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "leerlingen.csv")))
+		sys.exit(1)
 
 	logging.debug("Collecting all the votes.")
-	data = csv.reader(open(sys.argv[1]))
+	data = csv.reader(stemmen_file)
 	# Collect all the votes
 	votes = []
 	for row in data:
@@ -60,7 +66,7 @@ if __name__ == "__main__":
 
 	logging.debug("Load all the worshops.")
 	# There are 2 rounds for the workshops
-	data = csv.reader(open(sys.argv[2]))
+	data = csv.reader(workshops_file)
 	places = [[],[]]
 	workshops = {}
 	for w in data:
@@ -75,11 +81,11 @@ if __name__ == "__main__":
 			places[0] += [int(w[0])] * int(w[2])
 			if int(w[3]) == 2: # Workshop has 2 rounds
 				places[1] += [int(w[0])] * int(w[2])
-	logging.debug("Places: %d %d" % (len(places[0]), len(places[1]))
+	logging.debug("Places: %d %d" % (len(places[0]), len(places[1])))
 
 	logging.debug("Get all the students.")
 	# All students
-	data = csv.reader(open(sys.argv[3]))
+	data = csv.reader(leerlingen_file)
 	students = {}
 	no_second_round = set()
 	for s in data:
