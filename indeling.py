@@ -71,7 +71,7 @@ if __name__ == "__main__":
 			places[0] += [int(w[0])] * int(w[2])
 			if int(w[3]) == 2: # Workshop has 2 rounds
 				places[1] += [int(w[0])] * int(w[2])
-
+	print "Places: ", len(places[0]), len(places[1])
 
 	logging.debug("Get all the students.")
 	# All students
@@ -130,6 +130,8 @@ if __name__ == "__main__":
 	f.close()
 
 
+
+# There is a bug in this code somewhere..
 	logging.debug("Lazy students...")
 	# Put all student who did not vote in random groups
 	available = []
@@ -139,6 +141,9 @@ if __name__ == "__main__":
 			if workshops[w]["plaatsen"] > len(workshops[w]["indeling"][0]):
 				available.append(w)
 	for s in students_without_vote:
+		if not available:
+			print "Not enough room"
+			break
 		w = random.choice(available)
 		workshops[w]["indeling"][0].append(s)
 		if workshops[w]["rondes"] != 2:
@@ -167,7 +172,7 @@ if __name__ == "__main__":
 					del(available[i])
 					break
 
-	
+# end of bug area
 
 	out = {}
 	for w in workshops.keys():
