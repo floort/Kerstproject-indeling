@@ -1,0 +1,9 @@
+Usage:
+./indeling.py stemmen.csv workshops.csv leerlingen.csv
+ = stemmen.csv = 
+"vote_id","leerling_id","want1",..,"want5","no1",..,"no5","0"
+ = workshops.csv = 
+workshhop_id,"naam",plaatsen,aantal_rondes,open
+ = leerlingen.csv = 
+"id","klas","naam","tussenv","achternaam","mentor"
+
