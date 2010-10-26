@@ -55,39 +55,31 @@ if __name__ == "__main__":
 			# User is lazy and hasn't voted
 			ll_lazy.append(int(row[1]))
 
-	logging.debug("Load all the worshops.")
+	logging.debug("Load all the workshops.")
 	# There are 2 rounds for the workshops
 	data = csv.reader(workshops_file)
-	places = [[],[]]
 	workshops = {}
+	indeling = {}
 	for w in data:
-		workshops[int(w[0])] = {
-			"name": w[1],
-			"plaatsen": int(w[2]),
-			"rondes": int(w[3]),
-			"open": int(w[4]),
-			"indeling": [[] for i in range(int(w[3]))]
-		}
-		if int(w[4]) == 1: # Workshop is open
-			places[0] += [int(w[0])] * int(w[2])
-			if int(w[3]) == 2: # Workshop has 2 rounds
-				places[1] += [int(w[0])] * int(w[2])
-	logging.debug("Places: %d %d" % (len(places[0]), len(places[1])))
+		if w[2] == "2": # two rounds
+			workshops[int(w[0])] = [int(w[1]), int(w[1])]
+			indeling[int(w[0])] = [[], []]
+		else: # one round
+			workshops[int(w[0])] = [int(w[1]), ]
+			indeling[int(w[0])] = [[], ]
 
-	logging.debug("Get all the students.")
-	# All students
-	data = csv.reader(leerlingen_file)
-	students = {}
-	no_second_round = set()
-	for s in data:
-		students[int(s[0])] = {
-			"klas": s[1],
-			"naam": s[2],
-			"tussenvoegsel": s[3],
-			"achternaam": s[4],
-			"mentor": s[5]
-		}
 
+	logging.debug("Inserting all fixed votes.")
+	for id in ll_fixed.keys():
+		w = ll_fixed[id][0]
+		workshops[w][0] -= 1
+		indeling[w][0].append(id)
+		w = ll_fixed[id][1]
+		if w:
+			workshops[w][1] -= 1
+			indeling[w][1].append(id)
+
+	
 
 
 
