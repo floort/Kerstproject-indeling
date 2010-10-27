@@ -96,7 +96,9 @@ if __name__ == "__main__":
 		w = random.choice(available)
 		workshops[w][0] -= 1
 		indeling[w][0].append(id)
-
+		if len(workshops[w]) == 1:
+			done.append(id)
+	
 
 
 	# Restructure the data before writing
