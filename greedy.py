@@ -72,8 +72,6 @@ if __name__ == "__main__":
 		if w != -1:
 			workshops[w][1] -= 1
 			indeling[w][1].append(id)
-	print indeling
-	print ll_fixed
 
 	logging.debug("Inserting regular votes.")
 	voters = ll_voting.keys()
