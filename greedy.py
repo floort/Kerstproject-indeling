@@ -12,6 +12,7 @@ import pickle
 
 DATA_DIR="/tmp/kerst"
 LOG_FILE="/tmp/kerst-log"
+OUT_FILE="/tmp/kerst/indeling.csv"
 
 
 logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG)
@@ -105,8 +106,18 @@ if __name__ == "__main__":
 
 
 
-
-
+	# Restructure the data before writing
+	out = {}
+	for id in ll_votes.keys()+ll_fixed.keys()+ll_lazy.keys():
+		out[id] = [-1, -1]
+	for w in indeling.keys():
+		for r in xrange(len(indeling[w])):
+			for id in indeling[w][r]:
+				out[id][r] = w
+	f = open(OUT_FILE, "w")
+	for id in out.keys():
+		f.write("%d, %d, %d\n"%(id, out[id][0], out[id][1]))
+	f.close()
 
 
 
