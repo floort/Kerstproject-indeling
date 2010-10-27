@@ -79,7 +79,34 @@ if __name__ == "__main__":
 			workshops[w][1] -= 1
 			indeling[w][1].append(id)
 
-	
+	logging.debug("Inserting regular votes.")
+	voters = ll_voting.keys()
+	# Handle voters in a random order
+	random.shuffle(voters)
+	done = [] # All voters who don't need to goto the second round
+	todo = [] # Could not have their desired workshops
+	for id in voters:
+		ok = 0
+		for v in ll_voting[id]["want"]:
+			if workshops[v][0] > 0:
+				workshops[v][0] -= 1
+				indeling[v][0].append(id)
+				if len(workshops[v]) == 1:
+					done.append(id) # no second round
+				ok = 1
+				break
+		if not ok:
+			todo.append(id)
+	for id in todo:
+		avalable = filter(lambda w: len(indeling[w][0])<workshops[w][0], workshops.keys())
+		w = random.choice(available)
+		workshops[w][0] -= 1
+		indeling[w][0].append(id)
+
+
+
+
+
 
 
 
