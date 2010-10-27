@@ -18,8 +18,6 @@ OUT_FILE="/tmp/kerst/indeling.csv"
 logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG)
 
 if __name__ == "__main__":
-	if not os.path.exists(os.path.join(DATA_DIR, "leerlingen.csv")):
-		sys.exit(1)
 	try:
 		stemmen_file = open(os.path.join(DATA_DIR, "stemmen.csv"))
 	except:
@@ -30,11 +28,6 @@ if __name__ == "__main__":
 	except:
 		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "workshops.csv")))
 		sys.exit(1)
-	try:
-		leerlingen_file = open(os.path.join(DATA_DIR, "leerlingen.csv"))
-	except:
-		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "leerlingen.csv")))
-		sys.exit(1)
 
 	ll_fixed = {}
 	ll_voting = {}
@@ -43,9 +36,9 @@ if __name__ == "__main__":
 	logging.debug("Collecting all the votes.")
 	data = csv.reader(stemmen_file)
 	for row in data:
-		if (row[12] == "0") or (row[13] == "0"):
+		if (row[12] != "0") or (row[13] != "0"):
 			# vote is fixed.
-			ll_fixed[int(row[1])] = [int(12), int(13)]
+			ll_fixed[int(row[1])] = [int(row[12]), int(row[13])]
 		elif row[2] != "0":
 			# User has voted
 			ll_voting[int(row[1])] = {
@@ -76,9 +69,11 @@ if __name__ == "__main__":
 		workshops[w][0] -= 1
 		indeling[w][0].append(id)
 		w = ll_fixed[id][1]
-		if w:
+		if w != -1:
 			workshops[w][1] -= 1
 			indeling[w][1].append(id)
+	print indeling
+	print ll_fixed
 
 	logging.debug("Inserting regular votes.")
 	voters = ll_voting.keys()
@@ -99,7 +94,7 @@ if __name__ == "__main__":
 		if not ok:
 			todo.append(id)
 	for id in todo:
-		avalable = filter(lambda w: len(indeling[w][0])<workshops[w][0], workshops.keys())
+		available = filter(lambda w: len(indeling[w][0])<workshops[w][0], workshops.keys())
 		w = random.choice(available)
 		workshops[w][0] -= 1
 		indeling[w][0].append(id)
@@ -108,7 +103,7 @@ if __name__ == "__main__":
 
 	# Restructure the data before writing
 	out = {}
-	for id in ll_votes.keys()+ll_fixed.keys()+ll_lazy.keys():
+	for id in ll_voting.keys() + ll_fixed.keys() + ll_lazy:
 		out[id] = [-1, -1]
 	for w in indeling.keys():
 		for r in xrange(len(indeling[w])):
