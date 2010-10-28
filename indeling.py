@@ -12,31 +12,12 @@ import pickle
 
 DATA_DIR="/tmp/kerst"
 LOG_FILE="/tmp/kerst-log"
+OUT_FILE="/tmp/kerst/indeling.csv"
 
 
 logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG)
 
-def cost_matrix(votes, places):
-	# Lower cost is better
-	cost = [[0 for i in xrange(len(places))] for j in xrange(len(votes))]
-	for person in xrange(len(votes)):
-		# Give points for the preferred workshops
-		for rank in xrange(len(votes[person]["want"])): # wants rank=0 most
-			for p in xrange(len(places)):
-				if places[p] == votes[person]["want"][rank]:
-					cost[person][p] = rank-5
-		# Give the "dont" workshops an high cost
-		for d in xrange(len(votes[person]["dont"])):
-			for p in xrange(len(places)):
-				if places[p] == votes[person]["dont"][d]:
-					cost[person][p] = 5 # high cost
-	return cost
-	
-
-
 if __name__ == "__main__":
-	if not os.path.exists(os.path.join(DATA_DIR, "leerlingen.csv")):
-		sys.exit(1)
 	try:
 		stemmen_file = open(os.path.join(DATA_DIR, "stemmen.csv"))
 	except:
@@ -47,158 +28,141 @@ if __name__ == "__main__":
 	except:
 		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "workshops.csv")))
 		sys.exit(1)
-	try:
-		leerlingen_file = open(os.path.join(DATA_DIR, "leerlingen.csv"))
-	except:
-		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "leerlingen.csv")))
-		sys.exit(1)
+
+	ll_fixed = {}
+	ll_voting = {}
+	ll_lazy = []
 
 	logging.debug("Collecting all the votes.")
 	data = csv.reader(stemmen_file)
-	# Collect all the votes
-	votes = []
 	for row in data:
-		votes.append({
-			"name": row[1],
-			"want": map(lambda i: int(i), row[2:7]),
-			"dont": map(lambda i: int(i), row[7:12])
-		})
+		if (row[12] != "0") or (row[13] != "0"):
+			# vote is fixed.
+			ll_fixed[int(row[1])] = [int(row[12]), int(row[13])]
+		elif row[2] != "0":
+			# User has voted
+			ll_voting[int(row[1])] = {
+				"want": map(lambda i: int(i), row[2:7]),
+				"dont": map(lambda i: int(i), row[7:12])
+			}
+		else:
+			# User is lazy and hasn't voted
+			ll_lazy.append(int(row[1]))
 
-	logging.debug("Load all the worshops.")
+
+	logging.debug("Load all the workshops.")
 	# There are 2 rounds for the workshops
 	data = csv.reader(workshops_file)
-	places = [[],[]]
 	workshops = {}
+	indeling = {}
 	for w in data:
-		workshops[int(w[0])] = {
-			"name": w[1],
-			"plaatsen": int(w[2]),
-			"rondes": int(w[3]),
-			"open": int(w[4]),
-			"indeling": [[] for i in range(int(w[3]))]
-		}
-		if int(w[4]) == 1: # Workshop is open
-			places[0] += [int(w[0])] * int(w[2])
-			if int(w[3]) == 2: # Workshop has 2 rounds
-				places[1] += [int(w[0])] * int(w[2])
-	logging.debug("Places: %d %d" % (len(places[0]), len(places[1])))
-
-	logging.debug("Get all the students.")
-	# All students
-	data = csv.reader(leerlingen_file)
-	students = {}
-	no_second_round = set()
-	for s in data:
-		students[int(s[0])] = {
-			"klas": s[1],
-			"naam": s[2],
-			"tussenvoegsel": s[3],
-			"achternaam": s[4],
-			"mentor": s[5]
-		}
+		if w[2] == "2": # two rounds
+			workshops[int(w[0])] = [int(w[1]), int(w[1])]
+			indeling[int(w[0])] = [[], []]
+		else: # one round
+			workshops[int(w[0])] = [int(w[1]), ]
+			indeling[int(w[0])] = [[], ]
 
 
-	logging.debug("Generating cost matrix.")
-	cost = cost_matrix(votes, places[0])
-	
-	logging.debug("Execute munkres algorithm.")
-	# Now solve the first round
-	m = Munkres()
-	indices = m.compute(cost)
-	
+	logging.debug("Inserting all fixed votes.")
+	for id in ll_fixed.keys():
+		w = ll_fixed[id][0]
+		workshops[w][0] -= 1
+		indeling[w][0].append(id)
+		w = ll_fixed[id][1]
+		if w != -1:
+			workshops[w][1] -= 1
+			indeling[w][1].append(id)
 
-	logging.debug("Utilizing results")
-	students_with_vote = set([a for a, b in indices])
-	students_without_vote = set(students.keys()) - students_with_vote
-	# Put students without vote in random place
-
-	for person, place in indices:
-		for i in xrange(len(votes[person]["want"])):
-			if votes[person]["want"][i] == places[0][place]:
-				del(votes[person]["want"][i])
+	logging.debug("Inserting regular votes.")
+	voters = ll_voting.keys()
+	# Handle voters in a random order
+	random.shuffle(voters)
+	done = [] # All voters who don't need to goto the second round
+	todo = [] # Could not have their desired workshops
+	for id in voters:
+		ok = 0
+		for v in ll_voting[id]["want"]:
+			if workshops[v][0] > 0:
+				workshops[v][0] -= 1
+				indeling[v][0].append(id)
+				if len(workshops[v]) == 1:
+					done.append(id) # no second round
+				else:
+					# remove vote for second round
+					ll_voting[id]["want"] = filter(lambda c: c!=v, ll_voting[id]["want"])
+				ok = 1
 				break
-		#print votes[person]["name"], "\t->\t", places[0][place]
-		workshops[places[0][place]]["indeling"][0].append(votes[person]["name"])
-		if workshops[places[0][place]]["rondes"] != 2:
-			no_second_round.add(votes[person]["name"])
-	
-
-	logging.debug("Computing second round.")
-	for n in no_second_round:
-		for i in xrange(len(votes)):
-			if votes[i]["name"] == n:
-				del(votes[i])
-				break
-	cost = cost_matrix(votes, places[1])
-	indices = m.compute(cost)
-
-	for person, place in indices:
-		workshops[places[1][place]]["indeling"][1].append(votes[person]["name"])
-
-	f = open("second_round.pickle", "wb")
-	pickle.dump(workshops, f)
-	f.close()
-
-
-
-	logging.debug("Lazy students...")
-	# Put all student who did not vote in random groups
-	available = []
-	lazy = {}
-	for w in workshops.keys():
-		if workshops[w]["open"]:
-			if workshops[w]["plaatsen"] > len(workshops[w]["indeling"][0]):
-				available.append(w)
-	for s in students_without_vote:
-		if not available:
-			logging.error("Not enough room")
-			break
+		if not ok:
+			todo.append(id)
+	for id in todo:
+		available = filter(lambda w: workshops[w][0] > 0, workshops.keys())
 		w = random.choice(available)
-		workshops[w]["indeling"][0].append(s)
-		if workshops[w]["rondes"] != 2:
-			no_second_round.add(s)
-		lazy[s] = w
-		if workshops[w]["plaatsen"] <= len(workshops[w]["indeling"][0]):
-			for i in xrange(len(available)):
-				if available[i] == w:
-					del(available[i])
-					break
-	f = open("first_lazy.pickle", "wb")
-	pickle.dump(workshops,f)
-	f.close()
+		workshops[w][0] -= 1
+		indeling[w][0].append(id)
+		if len(workshops[w]) == 1:
+			done.append(id)
 
-	available = []
-	for w in workshops.keys():
-		if workshops[w]["open"] and (workshops[w]["rondes"] == 2):
-			if workshops[w]["plaatsen"] > len(workshops[w]["indeling"][1]):
-				available.append(w)
-	for s in students_without_vote - no_second_round:
-		w = random.choice(list(set(available) - set([lazy[s]])))
-		workshops[w]["indeling"][1].append(s)
-		if workshops[w]["plaatsen"] <= len(workshops[w]["indeling"][1]):
-			for i in xrange(len(available)):
-				if available[i] == w:
-					del(available[i])
-					break
-
-
-	out = {}
-	for w in workshops.keys():
-		for l in workshops[w]["indeling"][0]:
-			out[int(l)] = [w]
-	for w in workshops.keys():
-		if workshops[w]["rondes"] == 2:
-			for l in workshops[w]["indeling"][1]:
-				out[int(l)].append(w)
+	logging.debug("Inserting regular voters (round 2)")
+	done = set(done)
+	todo = []
+	# The last voter from first round can pick first
+	voters.reverse()
+	for id in voters:
+		ok = 0
+		# skip the voters who do a double round
+		if id in done: continue
 		
-	f = open("out.csv", "w")
-	for l in out.keys():
-		if len(out[l]) == 2:
-			f.write("%d,%d,%d\n" % (l, out[l][0], out[l][1]))
-		else:
-			f.write("%d,%d,\n" % (l, out[l][0]))
+		for v in ll_voting[id]["want"]:
+			if len(workshops[v]) == 1: continue
+			if workshops[v][1] > 0:
+				workshops[v][1] -= 1
+				indeling[v][1].append(id)
+				ok = 1
+				break
+		if not ok:
+			todo.append(id)
+	for id in todo:
+		available = filter(
+			lambda w: workshops[w][1] > 0, 
+			filter(
+				lambda w: len(workshops[w]) > 1, 
+				workshops.keys()
+			)
+		)
+		w = random.choice(available)
+		workshops[w][1] -= 1
+		indeling[w][1].append(id)
 
+
+	logging.debug("Inserting none-voters")
+	for id in ll_lazy:
+		for r in [0,1]:
+			if r == 0:
+				available = filter(lambda w: workshops[w][0] > 0, workshops.keys())
+			else:
+				available = filter(
+					lambda w: workshops[w][1] > 0,
+					filter(lambda w: len(workshops[w]) > 1, workshops.keys())
+				)
+			w = random.choice(available)
+			workshops[w][r] -= 1
+			indeling[w][r].append(id)
+			# Skip second round if workshops takes 2 rounds
+			if len(workshops[w]) == 1: break 
+
+	# Restructure the data before writing
+	out = {}
+	for id in ll_voting.keys() + ll_fixed.keys() + ll_lazy:
+		out[id] = [-1, -1]
+	for w in indeling.keys():
+		for r in xrange(len(indeling[w])):
+			for id in indeling[w][r]:
+				out[id][r] = w
+	f = open(OUT_FILE, "w")
+	for id in out.keys():
+		f.write("%d, %d, %d\n"%(id, out[id][0], out[id][1]))
 	f.close()
-	
+
 
 
