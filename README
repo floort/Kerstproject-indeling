@@ -7,5 +7,8 @@ LOG_FILE="/var/log/kerstproject.log"
 # Store the assignments here
 OUT_FILE="/some/path/indeling.csv"
 
+== Running ==
+Put stemmen.csv and workshops.csv in DATA_DIR.
+The output will be in OUT_FILE
 
 
