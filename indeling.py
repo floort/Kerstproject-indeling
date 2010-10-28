@@ -9,7 +9,7 @@ import logging
 import pprint
 import pickle
 
-from kerst-config import *
+from kerst_config import *
 
 logging.basicConfig(filename=LOG_FILE, level=logging.ERROR)
 
