@@ -2,7 +2,6 @@
 
 import sys
 import csv
-from munkres import Munkres
 import os.path
 import random
 import logging
