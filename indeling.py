@@ -9,12 +9,7 @@ import logging
 import pprint
 import pickle
 
-
-WORKSHOPS_DATA="/tmp/kerst/workshops.csv"
-STEMMEN_DATA="/tmp/kerst/stemmen.csv"
-LOG_FILE="/tmp/kerst-log"
-OUT_FILE="/tmp/kerst/indeling.csv"
-
+from kerst-config import *
 
 logging.basicConfig(filename=LOG_FILE, level=logging.ERROR)
 
