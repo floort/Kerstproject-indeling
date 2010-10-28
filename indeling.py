@@ -44,6 +44,10 @@ if __name__ == "__main__":
 			# User is lazy and hasn't voted
 			ll_lazy.append(int(row[1]))
 
+	if not (ll_fixed or ll_lazy or ll_voting):
+		logging.debug("Empty input files.")
+		sys.exit(1)
+
 
 	logging.debug("Load all the workshops.")
 	# There are 2 rounds for the workshops
