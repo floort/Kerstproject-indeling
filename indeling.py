@@ -16,18 +16,18 @@ LOG_FILE="/tmp/kerst-log"
 OUT_FILE="/tmp/kerst/indeling.csv"
 
 
-logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG)
+logging.basicConfig(filename=LOG_FILE, level=logging.ERROR)
 
 if __name__ == "__main__":
 	try:
 		stemmen_file = open(STEMMEN_DATA)
 	except:
-		logging.error("Could not open file: %s" %(STEMMEN_DATA))
+		logging.debug("Could not open file: %s" %(STEMMEN_DATA))
 		sys.exit(1)
 	try:
 		workshops_file = open(WORKSHOPS_DATA)
 	except:
-		logging.error("Could not open file: %s" %(WORKSHOPS_DATA))
+		logging.debug("Could not open file: %s" %(WORKSHOPS_DATA))
 		sys.exit(1)
 
 	ll_fixed = {}
