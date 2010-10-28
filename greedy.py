@@ -49,6 +49,7 @@ if __name__ == "__main__":
 			# User is lazy and hasn't voted
 			ll_lazy.append(int(row[1]))
 
+
 	logging.debug("Load all the workshops.")
 	# There are 2 rounds for the workshops
 	data = csv.reader(workshops_file)
@@ -95,7 +96,7 @@ if __name__ == "__main__":
 		if not ok:
 			todo.append(id)
 	for id in todo:
-		available = filter(lambda w: len(indeling[w][0])<workshops[w][0], workshops.keys())
+		available = filter(lambda w: workshops[w][0] > 0, workshops.keys())
 		w = random.choice(available)
 		workshops[w][0] -= 1
 		indeling[w][0].append(id)
@@ -123,7 +124,7 @@ if __name__ == "__main__":
 			todo.append(id)
 	for id in todo:
 		available = filter(
-			lambda w: len(indeling[w][1])<workshops[w][1], 
+			lambda w: workshops[w][1] > 0, 
 			filter(
 				lambda w: len(workshops[w]) > 1, 
 				workshops.keys()
@@ -138,15 +139,17 @@ if __name__ == "__main__":
 	for id in ll_lazy:
 		for r in [0,1]:
 			if r == 0:
-				available = filter(lambda w: len(indeling[w][0])<workshops[w][0], workshops.keys())
+				available = filter(lambda w: workshops[w][0] > 0, workshops.keys())
 			else:
 				available = filter(
-					lambda w: len(indeling[w][1])<workshops[w][1],
+					lambda w: workshops[w][1] > 0,
 					filter(lambda w: len(workshops[w]) > 1, workshops.keys())
 				)
 			w = random.choice(available)
 			workshops[w][r] -= 1
 			indeling[w][r].append(id)
+			# Skip second round if workshops takes 2 rounds
+			if len(workshops[w]) == 1: break 
 
 	# Restructure the data before writing
 	out = {}
