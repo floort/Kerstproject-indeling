@@ -1,9 +1,11 @@
-Usage:
-./indeling.py stemmen.csv workshops.csv leerlingen.csv
- = stemmen.csv = 
-"vote_id","leerling_id","want1",..,"want5","no1",..,"no5","0"
- = workshops.csv = 
-workshhop_id,"naam",plaatsen,aantal_rondes,open
- = leerlingen.csv = 
-"id","klas","naam","tussenv","achternaam","mentor"
+== Configuration ==
+Change the following three configuration parameters in the script:
+# The directory where the votes and workshop are stored.
+DATA_DIR="/some/path"
+# Log output to this file
+LOG_FILE="/var/log/kerstproject.log"
+# Store the assignments here
+OUT_FILE="/some/path/indeling.csv"
+
+
 
