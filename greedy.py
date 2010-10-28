@@ -87,6 +87,9 @@ if __name__ == "__main__":
 				indeling[v][0].append(id)
 				if len(workshops[v]) == 1:
 					done.append(id) # no second round
+				else:
+					# remove vote for second round
+					ll_voting[id]["want"] = filter(lambda c: c!=v, ll_voting[id]["want"])
 				ok = 1
 				break
 		if not ok:
@@ -98,8 +101,52 @@ if __name__ == "__main__":
 		indeling[w][0].append(id)
 		if len(workshops[w]) == 1:
 			done.append(id)
-	
 
+	logging.debug("Inserting regular voters (round 2)")
+	done = set(done)
+	todo = []
+	# The last voter from first round can pick first
+	voters.reverse()
+	for id in voters:
+		ok = 0
+		# skip the voters who do a double round
+		if id in done: continue
+		
+		for v in ll_voting[id]["want"]:
+			if len(workshops[v]) == 1: continue
+			if workshops[v][1] > 0:
+				workshops[v][1] -= 1
+				indeling[v][1].append(id)
+				ok = 1
+				break
+		if not ok:
+			todo.append(id)
+	for id in todo:
+		available = filter(
+			lambda w: len(indeling[w][1])<workshops[w][1], 
+			filter(
+				lambda w: len(workshops[w]) > 1, 
+				workshops.keys()
+			)
+		)
+		w = random.choice(available)
+		workshops[w][1] -= 1
+		indeling[w][1].append(id)
+
+
+	logging.debug("Inserting none-voters")
+	for id in ll_lazy:
+		for r in [0,1]:
+			if r == 0:
+				available = filter(lambda w: len(indeling[w][0])<workshops[w][0], workshops.keys())
+			else:
+				available = filter(
+					lambda w: len(indeling[w][1])<workshops[w][1],
+					filter(lambda w: len(workshops[w]) > 1, workshops.keys())
+				)
+			w = random.choice(available)
+			workshops[w][r] -= 1
+			indeling[w][r].append(id)
 
 	# Restructure the data before writing
 	out = {}
