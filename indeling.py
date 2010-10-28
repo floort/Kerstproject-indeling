@@ -10,7 +10,8 @@ import pprint
 import pickle
 
 
-DATA_DIR="/tmp/kerst"
+WORKSHOPS_DATA="/tmp/kerst/workshops.csv"
+STEMMEN_DATA="/tmp/kerst/stemmen.csv"
 LOG_FILE="/tmp/kerst-log"
 OUT_FILE="/tmp/kerst/indeling.csv"
 
@@ -19,14 +20,14 @@ logging.basicConfig(filename=LOG_FILE, level=logging.DEBUG)
 
 if __name__ == "__main__":
 	try:
-		stemmen_file = open(os.path.join(DATA_DIR, "stemmen.csv"))
+		stemmen_file = open(STEMMEN_DATA)
 	except:
-		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "stemmen.csv")))
+		logging.error("Could not open file: %s" %(STEMMEN_DATA))
 		sys.exit(1)
 	try:
-		workshops_file = open(os.path.join(DATA_DIR, "workshops.csv"))
+		workshops_file = open(WORKSHOPS_DATA)
 	except:
-		logging.error("Could not open file: %s" %(os.path.join(DATA_DIR, "workshops.csv")))
+		logging.error("Could not open file: %s" %(WORKSHOPS_DATA))
 		sys.exit(1)
 
 	ll_fixed = {}
