@@ -165,5 +165,11 @@ if __name__ == "__main__":
 		f.write("%d, %d, %d\n"%(id, out[id][0], out[id][1]))
 	f.close()
 
+	# clear input files
+	f = open(WORKSHOPS_DATA, "w")
+	f.close()
+	f = open(STEMMEN_DATA, "w")
+	f.close()
+
 
 
