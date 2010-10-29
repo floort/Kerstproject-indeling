@@ -2,4 +2,4 @@ WORKSHOPS_DATA="/tmp/kerst/workshops.csv"
 STEMMEN_DATA="/tmp/kerst/stemmen.csv"
 LOG_FILE="/tmp/kerst-log"
 OUT_FILE="/tmp/kerst/indeling.csv"
-
+CLEAN=False

@@ -101,6 +101,8 @@ if __name__ == "__main__":
 		indeling[w][0].append(id)
 		if len(workshops[w]) == 1:
 			done.append(id)
+		else:
+			ll_voting[id]["want"] = filter(lambda c: c!=w, ll_voting[id]["want"])
 
 	logging.debug("Inserting regular voters (round 2)")
 	done = set(done)
@@ -122,11 +124,18 @@ if __name__ == "__main__":
 		if not ok:
 			todo.append(id)
 	for id in todo:
+		for w in indeling.keys():
+			if id in set(indeling[w][0]): 
+				skip = w
+				break
 		available = filter(
 			lambda w: workshops[w][1] > 0, 
 			filter(
 				lambda w: len(workshops[w]) > 1, 
-				workshops.keys()
+				filter(
+					lambda w: w != skip,
+					workshops.keys()
+				)
 			)
 		)
 		w = random.choice(available)
@@ -142,13 +151,14 @@ if __name__ == "__main__":
 			else:
 				available = filter(
 					lambda w: workshops[w][1] > 0,
-					filter(lambda w: len(workshops[w]) > 1, workshops.keys())
+					filter(lambda w: len(workshops[w]) > 1, 
+						filter(lambda w: w != ws, workshops.keys()))
 				)
-			w = random.choice(available)
-			workshops[w][r] -= 1
-			indeling[w][r].append(id)
+			ws = random.choice(available)
+			workshops[ws][r] -= 1
+			indeling[ws][r].append(id)
 			# Skip second round if workshops takes 2 rounds
-			if len(workshops[w]) == 1: break 
+			if len(workshops[ws]) == 1: break 
 
 	# Restructure the data before writing
 	out = {}
@@ -164,10 +174,11 @@ if __name__ == "__main__":
 	f.close()
 
 	# clear input files
-	f = open(WORKSHOPS_DATA, "w")
-	f.close()
-	f = open(STEMMEN_DATA, "w")
-	f.close()
+	if CLEAN:
+		f = open(WORKSHOPS_DATA, "w")
+		f.close()
+		f = open(STEMMEN_DATA, "w")
+		f.close()
 
 
 
