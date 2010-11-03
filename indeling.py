@@ -38,7 +38,7 @@ if __name__ == "__main__":
 			# User has voted
 			ll_voting[int(row[1])] = {
 				"want": map(lambda i: int(i), row[2:7]),
-				"dont": map(lambda i: int(i), row[7:12])
+				"dont": set(map(lambda i: int(i), row[7:12]))
 			}
 		else:
 			# User is lazy and hasn't voted
@@ -95,7 +95,8 @@ if __name__ == "__main__":
 		if not ok:
 			todo.append(id)
 	for id in todo:
-		available = filter(lambda w: workshops[w][0] > 0, workshops.keys())
+		available = filter(lambda w: workshops[w][0] > 0, 
+			list(set(workshops.keys()) - ll_voting[id]["dont"]))
 		w = random.choice(available)
 		workshops[w][0] -= 1
 		indeling[w][0].append(id)
@@ -134,7 +135,7 @@ if __name__ == "__main__":
 				lambda w: len(workshops[w]) > 1, 
 				filter(
 					lambda w: w != skip,
-					workshops.keys()
+					list(set(workshops.keys()) - ll_voting[id]["dont"])
 				)
 			)
 		)
