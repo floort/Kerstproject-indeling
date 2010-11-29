@@ -54,6 +54,7 @@ if __name__ == "__main__":
 	data = csv.reader(workshops_file)
 	workshops = {}
 	indeling = {}
+	closed_workshops = set()
 	for w in data:
 		if w[2] == "2": # two rounds
 			workshops[int(w[0])] = [int(w[1]), int(w[1])]
@@ -61,6 +62,8 @@ if __name__ == "__main__":
 		else: # one round
 			workshops[int(w[0])] = [int(w[1]), ]
 			indeling[int(w[0])] = [[], ]
+		if int(w[4]) == 0: # Workshop is closed
+			closed_workshops.add(int(w[0]))
 
 
 	logging.debug("Inserting all fixed votes.")
@@ -148,13 +151,14 @@ if __name__ == "__main__":
 	for id in ll_lazy:
 		for r in [0,1]:
 			if r == 0:
-				available = filter(lambda w: workshops[w][0] > 0, workshops.keys())
+				available = filter(lambda w: w not in closed_workshops, 
+						filter(lambda w: workshops[w][0] > 0, workshops.keys()))
 			else:
-				available = filter(
-					lambda w: workshops[w][1] > 0,
-					filter(lambda w: len(workshops[w]) > 1, 
-						filter(lambda w: w != ws, workshops.keys()))
-				)
+				available = filter(lambda w: w not in closed_workshops,
+					filter(lambda w: workshops[w][1] > 0,
+						filter(lambda w: len(workshops[w]) > 1, 
+							filter(lambda w: w != ws, workshops.keys()))
+				))
 			ws = random.choice(available)
 			workshops[ws][r] -= 1
 			indeling[ws][r].append(id)
