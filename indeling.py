@@ -62,7 +62,7 @@ if __name__ == "__main__":
 		else: # one round
 			workshops[int(w[0])] = [int(w[1]), ]
 			indeling[int(w[0])] = [[], ]
-		if int(w[4]) == 0: # Workshop is closed
+		if int(w[3]) == 0: # Workshop is closed
 			closed_workshops.add(int(w[0]))
 
 
